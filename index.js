@@ -6,7 +6,7 @@ import teacherRoutes from "./Route/GuruRoute.js";
 import quizRoutes from "./Route/QuizRoute.js";
 import kkmRoutes from "./Route/KkmRoute.js";
 import apiRoutes from "./Route/apiRoutes.js";
-import { sequelize } from "./config/database.js"; // Assuming you have a Sequelize config file
+import { sequelize } from "./Database/DB.js"; // Assuming you have a Sequelize config file
 
 config();
 
