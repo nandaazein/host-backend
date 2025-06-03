@@ -10,7 +10,7 @@ import teacherModel from "./Models/GuruModel.js";
 import studentModel from "./Models/SiswaModel.js";
 import kkmModel from "./Models/KkmModel.js";
 import quizModel from "./Models/QuizModel.js";
-import { sequelize } from "./Database/DB.js"; // Renamed DB to sequelize for clarity
+import { sequelize } from "./Database/DB.js";
 
 config();
 
