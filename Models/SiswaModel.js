@@ -546,7 +546,9 @@ const studentModel = {
             sequelize.fn("AVG", sequelize.col("Score.evaluasi_akhir")),
             "evaluasi",
           ],
+          "nis", // Add this line to include nis in the select
         ],
+        group: ["nis"], // Add this line to group by nis
         raw: true,
       });
 
