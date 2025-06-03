@@ -6,10 +6,11 @@ import teacherRoutes from "./Route/GuruRoute.js";
 import quizRoutes from "./Route/QuizRoute.js";
 import kkmRoutes from "./Route/KkmRoute.js";
 import apiRoutes from "./Route/apiRoutes.js";
-import { sequelize } from "./Database/DB.js"; // Assuming you have a Sequelize config file
-
-config();
-
+import GuruModel from "./Models/GuruModel.js";
+import SiswaModel from "./Models/SiswaModel.js";
+import KkmModel from "./Models/KkmModel.js";
+import QuizModel from "./Models/QuizModel.js";
+import DB from "./Database/DB.js";
 const app = express();
 
 // Middleware
@@ -36,17 +37,15 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-// Database synchronization
-const syncDatabase = async () => {
-  try {
-    // Sync all defined models to the database
-    await sequelize.sync({ alter: true }); // Use { alter: true } to update schema without dropping tables
-    console.log("Database synchronized successfully.");
-  } catch (error) {
-    console.error("Error synchronizing database:", error);
-    process.exit(1); // Exit process if sync fails to prevent running with an inconsistent DB
-  }
-};
+try {
+  await DB.authenticate();
+  await GuruModel.sync();
+  await SiswaModel.sync();
+  await KkmModel.sync();
+  await QuizModel.sync();
+} catch (error) {
+  console.error(error);
+}
 
 // Start server after database sync
 const PORT = process.env.PORT || 5000;
