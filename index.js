@@ -6,10 +6,10 @@ import teacherRoutes from "./Route/GuruRoute.js";
 import quizRoutes from "./Route/QuizRoute.js";
 import kkmRoutes from "./Route/KkmRoute.js";
 import apiRoutes from "./Route/apiRoutes.js";
-import GuruModel from "./Models/GuruModel.js";
-import SiswaModel from "./Models/SiswaModel.js";
-import KkmModel from "./Models/KkmModel.js";
-import QuizModel from "./Models/QuizModel.js";
+import teacherModel from "./Models/GuruModel.js";
+import studentModel from "./Models/SiswaModel.js";
+import kkmModel from "./Models/KkmModel.js";
+import quizModel from "./Models/QuizModel.js";
 import DB from "./Database/DB.js";
 const app = express();
 
