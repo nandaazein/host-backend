@@ -1,13 +1,31 @@
-import pool from "../Database/DB.js";
+import { DataTypes } from "sequelize";
+import { sequelize } from "../Database/DB.js";
+
+const KKMSetting = sequelize.define(
+  "KKMSetting",
+  {
+    quiz_number: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
+    kkm: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+  },
+  {
+    tableName: "kkm_settings",
+    timestamps: true,
+  }
+);
 
 const kkmModel = {
   async getKKMSettings() {
     try {
-      const [rows] = await pool.query(
-        "SELECT quiz_number, kkm FROM kkm_settings ORDER BY quiz_number"
-      );
-      if (rows.length === 0) {
-        // Return default KKM values for quizzes 1-5
+      const settings = await KKMSetting.findAll({
+        order: [["quiz_number", "ASC"]],
+      });
+      if (settings.length === 0) {
         return [
           { quiz_number: 1, kkm: 75 },
           { quiz_number: 2, kkm: 75 },
@@ -16,7 +34,7 @@ const kkmModel = {
           { quiz_number: 5, kkm: 75 },
         ];
       }
-      return rows;
+      return settings;
     } catch (error) {
       console.error("Error in getKKMSettings:", error);
       throw new Error("Gagal mengambil pengaturan KKM");
@@ -24,9 +42,8 @@ const kkmModel = {
   },
 
   async updateKKMSettings(settings) {
-    const connection = await pool.getConnection();
+    const transaction = await sequelize.transaction();
     try {
-      await connection.beginTransaction();
       for (const setting of settings) {
         const { quiz_number, kkm } = setting;
         if (isNaN(kkm) || kkm < 0 || kkm > 100) {
@@ -35,41 +52,32 @@ const kkmModel = {
         if (![1, 2, 3, 4, 5].includes(quiz_number)) {
           throw new Error(`Nomor kuis ${quiz_number} tidak valid`);
         }
-        const [existing] = await connection.query(
-          "SELECT id FROM kkm_settings WHERE quiz_number = ?",
-          [quiz_number]
-        );
-        if (existing.length > 0) {
-          await connection.query(
-            "UPDATE kkm_settings SET kkm = ?, updated_at = CURRENT_TIMESTAMP WHERE quiz_number = ?",
-            [kkm, quiz_number]
-          );
+        const existing = await KKMSetting.findOne({
+          where: { quiz_number },
+          transaction,
+        });
+        if (existing) {
+          await existing.update({ kkm }, { transaction });
         } else {
-          await connection.query(
-            "INSERT INTO kkm_settings (quiz_number, kkm) VALUES (?, ?)",
-            [quiz_number, kkm]
-          );
+          await KKMSetting.create({ quiz_number, kkm }, { transaction });
         }
       }
-      await connection.commit();
+      await transaction.commit();
     } catch (error) {
-      await connection.rollback();
+      await transaction.rollback();
       throw error;
-    } finally {
-      connection.release();
     }
   },
 
   async getKKMByQuizNumber(quizNumber) {
     try {
-      const [rows] = await pool.query(
-        "SELECT kkm FROM kkm_settings WHERE quiz_number = ?",
-        [quizNumber]
-      );
-      return rows[0] ? rows[0].kkm : 75; // Default KKM
+      const setting = await KKMSetting.findOne({
+        where: { quiz_number: quizNumber },
+      });
+      return setting?.kkm || 75;
     } catch (error) {
       console.error("Error in getKKMByQuizNumber:", error);
-      return 75; // Fallback to default
+      return 75;
     }
   },
 };

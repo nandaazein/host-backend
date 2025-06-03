@@ -1,19 +1,57 @@
-import pool from '../Database/DB.js';
-import bcrypt from 'bcryptjs';
+import { DataTypes } from "sequelize";
+import { sequelize } from "../Database/DB.js";
+import bcrypt from "bcryptjs";
+
+const Teacher = sequelize.define(
+  "Teacher",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    nip: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
+    full_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    school: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    role: {
+      type: DataTypes.STRING,
+      defaultValue: "teacher",
+    },
+  },
+  {
+    tableName: "teachers",
+    timestamps: true,
+  }
+);
 
 const teacherModel = {
   async findByNIP(nip) {
-    const [rows] = await pool.query('SELECT * FROM teachers WHERE nip = ?', [nip]);
-    return rows[0];
+    return await Teacher.findOne({ where: { nip } });
   },
 
   async create({ nip, fullName, school, password }) {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const role = 'teacher';
-    await pool.query(
-      'INSERT INTO teachers (nip, full_name, school, password, role) VALUES (?, ?, ?, ?, ?)',
-      [nip, fullName, school, hashedPassword, role]
-    );
+    await Teacher.create({
+      nip,
+      full_name: fullName,
+      school,
+      password: hashedPassword,
+      role: "teacher",
+    });
   },
 
   async login(nip, password) {
@@ -26,9 +64,9 @@ const teacherModel = {
       nip: teacher.nip,
       full_name: teacher.full_name,
       school: teacher.school,
-      role: teacher.role
+      role: teacher.role,
     };
-  }
+  },
 };
 
 export default teacherModel;

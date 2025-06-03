@@ -1,44 +1,184 @@
-import pool from "../Database/DB.js";
-import bcrypt from "bcryptjs";
+import { DataTypes } from 'sequelize';
+import { sequelize } from '../Database/DB.js';
+import bcrypt from 'bcryptjs';
+
+const Student = sequelize.define('Student', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  nis: {
+    type: DataTypes.STRING,
+    unique: true,
+    allowNull: false,
+  },
+  full_name: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  class: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  password: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: 'BELUM SELESAI',
+  },
+  progress: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0',
+  },
+  role: {
+    type: DataTypes.STRING,
+    defaultValue: 'student',
+  },
+  quiz1_completed: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  quiz2_completed: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  quiz3_completed: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  quiz4_completed: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+  evaluation_completed: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+  },
+}, {
+  tableName: 'students',
+  timestamps: true,
+});
+
+const Score = sequelize.define('Score', {
+  nis: {
+    type: DataTypes.STRING,
+    primaryKey: true,
+  },
+  kuis1: {
+    type: DataTypes.INTEGER,
+  },
+  kuis2: {
+    type: DataTypes.INTEGER,
+  },
+  kuis3: {
+    type: DataTypes.INTEGER,
+  },
+  kuis4: {
+    DataTypes: INTEGER,
+  },
+  latihan1: {
+    type: DataTypes.INTEGER,
+  },
+  latihan2: {
+    type: DataTypes.INTEGER,
+  },
+  latihan3: {
+    type: DataTypes.INTEGER,
+  },
+  latihan4: {
+    type: DataTypes.INTEGER,
+  },
+  evaluasi_akhir: {
+    type: DataTypes.INTEGER,
+  },
+}, {
+  tableName: 'scores',
+  timestamps: true,
+});
+
+const QuizAttempt = sequelize.define('QuizAttempt', {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true,
+  },
+  nis: {
+    type: DataTypes.STRING,
+    allowNull: false,
+  },
+  quiz_number: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  score: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+  attempt_time: {
+    type: DataTypes.DATE,
+    defaultValue: DataTypes.NOW,
+  },
+}, {
+  tableName: 'quiz_attempts',
+  timestamps: false,
+});
+
+const KKMSetting = sequelize.define('KKMSetting', {
+  quiz_number: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+  },
+  kkm: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
+}, {
+  tableName: 'kkm_settings',
+  timestamps: true,
+});
+
+Student.hasOne(Score, { foreignKey: 'nis', sourceKey: 'nis' });
+Score.belongsTo(Student, { foreignKey: 'nis', targetKey: 'nis' });
+Student.hasMany(QuizAttempt, { foreignKey: 'nis', sourceKey: 'nis' });
+QuizAttempt.belongsTo(Student, { foreignKey: 'nis', targetKey: 'nis' });
 
 const studentModel = {
   async findByNIS(nis) {
-    const [rows] = await pool.query("SELECT * FROM students WHERE nis = ?", [
-      nis,
-    ]);
-    return rows[0];
+    return await Student.findOne({ where: { nis } });
   },
 
   async findById(id) {
-    const [rows] = await pool.query("SELECT * FROM students WHERE id = ?", [
-      id,
-    ]);
-    return rows[0];
+    return await Student.findByPk(id);
   },
 
   async register({ nis, name, className, password, confirmPassword, token }) {
     if (password !== confirmPassword) {
-      throw new Error("Kata sandi tidak cocok");
+      throw new Error('Kata sandi tidak cocok');
     }
-    if (token !== "123") {
-      throw new Error("Token tidak valid");
+    if (token !== '123') {
+      throw new Error('Token tidak valid');
     }
-    const existingStudent = await studentModel.findByNIS(nis);
+    const existingStudent = await this.findByNIS(nis);
     if (existingStudent) {
-      throw new Error("NIS sudah terdaftar");
+      throw new Error('NIS sudah terdaftar');
     }
     const hashedPassword = await bcrypt.hash(password, 10);
-    const status = "BELUM SELESAI";
-    const progress = 0;
-    const role = "student";
-    await pool.query(
-      "INSERT INTO students (nis, full_name, class, password, status, progress, role) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [nis, name, className, hashedPassword, status, progress, role]
-    );
+    await Student.create({
+      nis,
+      full_name: name,
+      class: className,
+      password: hashedPassword,
+      status: 'BELUM SELESAI',
+      progress: 0,
+      role: 'student',
+    });
   },
 
   async login(nis, password) {
-    const student = await studentModel.findByNIS(nis);
+    const student = await this.findByNIS(nis);
     if (!student || !(await bcrypt.compare(password, student.password))) {
       return null;
     }
@@ -54,78 +194,66 @@ const studentModel = {
 
   async getAllStudents() {
     try {
-      const [rows] = await pool.query(
-        "SELECT nis, full_name, class, status, progress FROM students"
-      );
-      return rows;
+      return await Student.findAll({
+        attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+      });
     } catch (error) {
-      console.error("Error in getAllStudents:", error);
+      console.error('Error in getAllStudents:', error);
       throw error;
     }
   },
 
   async getClasses() {
-    const [rows] = await pool.query(
-      "SELECT DISTINCT class FROM students ORDER BY class"
-    );
-    return rows.map((row) => row.class);
+    const students = await Student.findAll({
+      attributes: [[sequelize.fn('DISTINCT', sequelize.col('class')), 'class']],
+      order: [['class', 'ASC']],
+    });
+    return students.map((row) => row.class);
   },
 
   async updateProgress(nis, progress) {
     if (isNaN(progress) || progress < 0) {
-      throw new Error("Progres tidak valid (harus angka positif)");
+      throw new Error('Progres tidak valid (harus angka positif)');
     }
-
-    const [currentRows] = await pool.query(
-      "SELECT progress FROM students WHERE nis = ?",
-      [nis]
-    );
-    if (!currentRows[0]) {
-      throw new Error("Siswa tidak ditemukan");
+    const student = await Student.findOne({ where: { nis } });
+    if (!student) {
+      throw new Error('Siswa tidak ditemukan');
     }
-    const currentProgress = currentRows[0].progress || 0;
-    const newProgress = currentProgress + progress;
-    const finalProgress = Math.min(newProgress, 100);
-    const status = finalProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
-
-    await pool.query(
-      "UPDATE students SET progress = ?, status = ? WHERE nis = ?",
-      [finalProgress, status, nis]
-    );
-
-    const [rows] = await pool.query(
-      "SELECT nis, full_name, class, status, progress FROM students WHERE nis = ?",
-      [nis]
-    );
-    return rows[0];
+    const currentProgress = student.progress || 0;
+    const newProgress = Math.min(currentProgress + progress, 100);
+    const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+    await student.update({ progress: newProgress, status });
+    return await Student.findOne({
+      where: { nis },
+      attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+    });
   },
 
   async updateStudent(nis, { full_name, class: className }) {
-    await pool.query(
-      "UPDATE students SET full_name = ?, class = ? WHERE nis = ?",
-      [full_name, className, nis]
+    await Student.update(
+      { full_name, class: className },
+      { where: { nis } }
     );
-    const [rows] = await pool.query(
-      "SELECT nis, full_name, class, status, progress FROM students WHERE nis = ?",
-      [nis]
-    );
-    return rows[0];
+    return await Student.findOne({
+      where: { nis },
+      attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+    });
   },
 
   async getProgress(nis) {
-    const [rows] = await pool.query(
-      "SELECT progress FROM students WHERE nis = ?",
-      [nis]
-    );
-    return rows[0] ? rows[0] : { progress: 0 };
+    const student = await Student.findOne({
+      where: { nis },
+      attributes: ['progress'],
+    });
+    return student || { progress: 0 };
   },
 
   async deleteStudent(nis) {
-    const student = await studentModel.findByNIS(nis);
+    const student = await this.findByNIS(nis);
     if (!student) {
-      throw new Error("Siswa tidak ditemukan");
+      throw new Error('Siswa tidak ditemukan');
     }
-    await pool.query("DELETE FROM students WHERE nis = ?", [nis]);
+    await Student.destroy({ where: { nis } });
   },
 
   async submitScore(nis, scores) {
@@ -141,64 +269,45 @@ const studentModel = {
       evaluasi_akhir,
     } = scores;
 
-    const connection = await pool.getConnection();
+    const transaction = await sequelize.transaction();
     try {
-      await connection.beginTransaction();
+      const student = await Student.findOne({ where: { nis }, transaction });
+      if (!student) {
+        throw new Error('Siswa tidak ditemukan');
+      }
 
-      // Log quiz attempt if kuis1-4 is provided
+      // Log quiz attempts
       if (kuis1 !== undefined) {
-        await connection.query(
-          "INSERT INTO quiz_attempts (nis, quiz_number, score) VALUES (?, ?, ?)",
-          [nis, 1, kuis1]
+        await QuizAttempt.create(
+          { nis, quiz_number: 1, score: kuis1 },
+          { transaction }
         );
       }
       if (kuis2 !== undefined) {
-        await connection.query(
-          "INSERT INTO quiz_attempts (nis, quiz_number, score) VALUES (?, ?, ?)",
-          [nis, 2, kuis2]
+        await QuizAttempt.create(
+          { nis, quiz_number: 2, score: kuis2 },
+          { transaction }
         );
       }
       if (kuis3 !== undefined) {
-        await connection.query(
-          "INSERT INTO quiz_attempts (nis, quiz_number, score) VALUES (?, ?, ?)",
-          [nis, 3, kuis3]
+        await QuizAttempt.create(
+          { nis, quiz_number: 3, score: kuis3 },
+          { transaction }
         );
       }
       if (kuis4 !== undefined) {
-        await connection.query(
-          "INSERT INTO quiz_attempts (nis, quiz_number, score) VALUES (?, ?, ?)",
-          [nis, 4, kuis4]
+        await QuizAttempt.create(
+          { nis, quiz_number: 4, score: kuis4 },
+          { transaction }
         );
       }
 
-      // Ambil data skor saat ini dan status kuis
-      const [scoreRows] = await connection.query(
-        "SELECT kuis1, kuis2, kuis3, kuis4 FROM scores WHERE nis = ?",
-        [nis]
-      );
-      const [studentRows] = await connection.query(
-        "SELECT progress, quiz1_completed, quiz2_completed, quiz3_completed, quiz4_completed FROM students WHERE nis = ?",
-        [nis]
-      );
-
-      if (!studentRows[0]) {
-        throw new Error("Siswa tidak ditemukan");
-      }
-
-      const currentScores = scoreRows[0] || {};
-      const currentProgress = studentRows[0].progress || 0;
-      const quizCompleted = {
-        1: studentRows[0].quiz1_completed || 0,
-        2: studentRows[0].quiz2_completed || 0,
-        3: studentRows[0].quiz3_completed || 0,
-        4: studentRows[0].quiz4_completed || 0,
-      };
-
-      // Ambil KKM untuk kuis 1-4
-      const [kkmRows] = await connection.query(
-        "SELECT quiz_number, kkm FROM kkm_settings WHERE quiz_number IN (1, 2, 3, 4)"
-      );
-      const kkmMap = kkmRows.reduce(
+      const currentScore = await Score.findOne({ where: { nis }, transaction });
+      const kkmSettings = await KKMSetting.findAll({
+        where: { quiz_number: [1, 2, 3, 4] },
+        transaction,
+      });
+      const kkmMap = kkmSettings.reduce(
         (acc, row) => {
           acc[row.quiz_number] = row.kkm;
           return acc;
@@ -206,24 +315,23 @@ const studentModel = {
         { 1: 70, 2: 70, 3: 70, 4: 70 }
       );
 
-      // Tentukan skor baru (ambil yang tertinggi) dan periksa progres
       const newScores = {
         kuis1:
           kuis1 !== undefined
-            ? Math.max(kuis1, currentScores.kuis1 || 0)
-            : currentScores.kuis1,
+            ? Math.max(kuis1, currentScore?.kuis1 || 0)
+            : currentScore?.kuis1,
         kuis2:
           kuis2 !== undefined
-            ? Math.max(kuis2, currentScores.kuis2 || 0)
-            : currentScores.kuis2,
+            ? Math.max(kuis2, currentScore?.kuis2 || 0)
+            : currentScore?.kuis2,
         kuis3:
           kuis3 !== undefined
-            ? Math.max(kuis3, currentScores.kuis3 || 0)
-            : currentScores.kuis3,
+            ? Math.max(kuis3, currentScore?.kuis3 || 0)
+            : currentScore?.kuis3,
         kuis4:
           kuis4 !== undefined
-            ? Math.max(kuis4, currentScores.kuis4 || 0)
-            : currentScores.kuis4,
+            ? Math.max(kuis4, currentScore?.kuis4 || 0)
+            : currentScore?.kuis4,
         latihan1,
         latihan2,
         latihan3,
@@ -233,8 +341,6 @@ const studentModel = {
 
       let progressToAdd = 0;
       const quizUpdates = {};
-
-      // Periksa setiap kuis untuk progres
       for (let i = 1; i <= 4; i++) {
         const scoreKey = `kuis${i}`;
         const completedKey = `quiz${i}_completed`;
@@ -242,165 +348,88 @@ const studentModel = {
         if (
           newScore !== undefined &&
           newScore >= kkmMap[i] &&
-          quizCompleted[i] === 0
+          student[completedKey] === 0
         ) {
           progressToAdd += 20;
           quizUpdates[completedKey] = 1;
         }
       }
 
-      // Perbarui skor di tabel scores
-      if (scoreRows[0]) {
-        await connection.query(
-          `UPDATE scores 
-           SET kuis1 = COALESCE(?, kuis1), 
-               kuis2 = COALESCE(?, kuis2), 
-               kuis3 = COALESCE(?, kuis3), 
-               kuis4 = COALESCE(?, kuis4), 
-               latihan1 = COALESCE(?, latihan1), 
-               latihan2 = COALESCE(?, latihan2), 
-               latihan3 = COALESCE(?, latihan3), 
-               latihan4 = COALESCE(?, latihan4), 
-               evaluasi_akhir = COALESCE(?, evaluasi_akhir),
-               updated_at = CURRENT_TIMESTAMP
-           WHERE nis = ?`,
-          [
-            newScores.kuis1,
-            newScores.kuis2,
-            newScores.kuis3,
-            newScores.kuis4,
-            newScores.latihan1,
-            newScores.latihan2,
-            newScores.latihan3,
-            newScores.latihan4,
-            newScores.evaluasi_akhir,
-            nis,
-          ]
-        );
+      if (currentScore) {
+        await currentScore.update(newScores, { transaction });
       } else {
-        await connection.query(
-          `INSERT INTO scores (nis, kuis1, kuis2, kuis3, kuis4, latihan1, latihan2, latihan3, latihan4, evaluasi_akhir)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-          [
-            nis,
-            newScores.kuis1,
-            newScores.kuis2,
-            newScores.kuis3,
-            newScores.kuis4,
-            newScores.latihan1,
-            newScores.latihan2,
-            newScores.latihan3,
-            newScores.latihan4,
-            newScores.evaluasi_akhir,
-          ]
+        await Score.create({ nis, ...newScores }, { transaction });
+      }
+
+      if (progressToAdd > 0) {
+        const newProgress = Math.min(student.progress + progressToAdd, 100);
+        const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+        await student.update(
+          { progress: newProgress, status, ...quizUpdates },
+          { transaction }
         );
       }
 
-      // Perbarui progres dan status kuis di tabel students
-      if (progressToAdd > 0) {
-        const newProgress = Math.min(currentProgress + progressToAdd, 100);
-        const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
-        let updateQuery = "UPDATE students SET progress = ?, status = ?";
-        const queryParams = [newProgress, status];
-
-        Object.keys(quizUpdates).forEach((key, index) => {
-          updateQuery += `, ${key} = ?`;
-          queryParams.push(quizUpdates[key]);
-        });
-
-        updateQuery += " WHERE nis = ?";
-        queryParams.push(nis);
-
-        await connection.query(updateQuery, queryParams);
-      }
-
-      await connection.commit();
+      await transaction.commit();
     } catch (error) {
-      await connection.rollback();
+      await transaction.rollback();
       throw error;
-    } finally {
-      connection.release();
     }
   },
 
   async submitEvaluationScore(nis, score) {
-    const connection = await pool.getConnection();
+    const transaction = await sequelize.transaction();
     try {
-      await connection.beginTransaction();
-
-      // Get current score and progress
-      const [scoreRows] = await connection.query(
-        "SELECT evaluasi_akhir FROM scores WHERE nis = ?",
-        [nis]
-      );
-      const [studentRows] = await connection.query(
-        "SELECT progress, evaluation_completed FROM students WHERE nis = ?",
-        [nis]
-      );
-
-      if (!studentRows[0]) {
-        throw new Error("Siswa tidak ditemukan");
+      const student = await Student.findOne({ where: { nis }, transaction });
+      if (!student) {
+        throw new Error('Siswa tidak ditemukan');
       }
 
-      const currentScore = scoreRows[0]?.evaluasi_akhir || 0;
-      const currentProgress = studentRows[0].progress || 0;
-      const evaluationCompleted = studentRows[0].evaluation_completed || 0;
+      const currentScore = await Score.findOne({ where: { nis }, transaction });
+      const kkmSetting = await KKMSetting.findOne({
+        where: { quiz_number: 5 },
+        transaction,
+      });
+      const kkm = kkmSetting?.kkm || 75;
 
-      // Store the highest score
-      if (score > currentScore || !scoreRows[0]) {
-        if (scoreRows[0]) {
-          await connection.query(
-            "UPDATE scores SET evaluasi_akhir = ?, updated_at = CURRENT_TIMESTAMP WHERE nis = ?",
-            [score, nis]
+      if (score > (currentScore?.evaluasi_akhir || 0)) {
+        if (currentScore) {
+          await currentScore.update(
+            { evaluasi_akhir: score },
+            { transaction }
           );
         } else {
-          await connection.query(
-            "INSERT INTO scores (nis, evaluasi_akhir) VALUES (?, ?)",
-            [nis, score]
-          );
+          await Score.create({ nis, evaluasi_akhir: score }, { transaction });
         }
       }
 
-      // Get KKM for quiz 5
-      const [kkmRows] = await connection.query(
-        "SELECT kkm FROM kkm_settings WHERE quiz_number = ?",
-        [5]
-      );
-      const kkm = kkmRows[0]?.kkm || 75;
-
-      // Update progress if score >= KKM and not previously completed
-      if (score >= kkm && evaluationCompleted === 0) {
-        const newProgress = Math.min(currentProgress + 20, 100);
-        const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
-        await connection.query(
-          "UPDATE students SET progress = ?, status = ?, evaluation_completed = 1 WHERE nis = ?",
-          [newProgress, status, nis]
+      if (score >= kkm && student.evaluation_completed === 0) {
+        const newProgress = Math.min(student.progress + 20, 100);
+        const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+        await student.update(
+          { progress: newProgress, status, evaluation_completed: 1 },
+          { transaction }
         );
       }
 
-      await connection.commit();
-      return { score: Math.max(score, currentScore), kkm };
+      await transaction.commit();
+      return { score: Math.max(score, currentScore?.evaluasi_akhir || 0), kkm };
     } catch (error) {
-      await connection.rollback();
+      await transaction.rollback();
       throw error;
-    } finally {
-      connection.release();
     }
   },
 
   async getScores(nis) {
     try {
-      const [scoreRows] = await pool.query(
-        "SELECT nis, kuis1, kuis2, kuis3, kuis4, latihan1, latihan2, latihan3, latihan4, evaluasi_akhir, created_at, updated_at FROM scores WHERE nis = ?",
-        [nis]
-      );
-      const [kkmRows] = await pool.query(
-        "SELECT quiz_number, kkm FROM kkm_settings WHERE quiz_number IN (1, 2, 3, 4, 5)"
-      );
-      const kkmMap = kkmRows.reduce(
+      const score = await Score.findOne({ where: { nis } });
+      const kkmSettings = await KKMSetting.findAll({
+        where: { quiz_number: [1, 2, 3, 4, 5] },
+      });
+      const kkmMap = kkmSettings.reduce(
         (acc, row) => {
           if (row.quiz_number === 5) {
-            acc["evaluasi_akhir"] = row.kkm;
+            acc['evaluasi_akhir'] = row.kkm;
           } else {
             acc[`kuis${row.quiz_number}`] = row.kkm;
           }
@@ -408,48 +437,52 @@ const studentModel = {
         },
         { kuis1: 75, kuis2: 75, kuis3: 75, kuis4: 75, evaluasi_akhir: 75 }
       );
-      const scores = scoreRows[0] || {};
-      return { ...scores, kkm: kkmMap };
+      return { ...score?.dataValues, kkm: kkmMap };
     } catch (error) {
-      console.error("Error in getScores:", error);
-      throw new Error("Gagal mengambil skor siswa");
+      console.error('Error in getScores:', error);
+      throw new Error('Gagal mengambil skor siswa');
     }
   },
 
   async getQuizAttempts(nis) {
     try {
-      const [rows] = await pool.query(
-        `SELECT qa.quiz_number, qa.score, qa.attempt_time, k.kkm
-         FROM quiz_attempts qa
-         LEFT JOIN kkm_settings k ON qa.quiz_number = k.quiz_number
-         WHERE qa.nis = ?
-         ORDER BY qa.attempt_time DESC`,
-        [nis]
-      );
-      return rows.map((row) => ({
+      const attempts = await QuizAttempt.findAll({
+        where: { nis },
+        include: [
+          {
+            model: KKMSetting,
+            attributes: ['kkm'],
+            where: { quiz_number: sequelize.col('QuizAttempt.quiz_number') },
+            required: false,
+          },
+        ],
+        order: [['attempt_time', 'DESC']],
+      });
+      return attempts.map((row) => ({
         quizNumber: row.quiz_number,
         score: row.score || 0,
         attemptTime: row.attempt_time,
-        kkm: row.kkm || 75,
+        kkm: row.KKMSetting?.kkm || 75,
       }));
     } catch (error) {
-      console.error("Error in getQuizAttempts:", error);
-      throw new Error("Gagal mengambil riwayat kuis");
+      console.error('Error in getQuizAttempts:', error);
+      throw new Error('Gagal mengambil riwayat kuis');
     }
   },
 
   async getAllScores() {
     try {
-      const [rows] = await pool.query(
-        "SELECT st.nis, st.full_name, st.class, s.latihan1, s.latihan2, s.latihan3, s.latihan4, s.kuis1, s.kuis2, s.kuis3, s.kuis4, s.evaluasi_akhir FROM students st LEFT JOIN scores s ON st.nis = s.nis"
-      );
-      const [kkmRows] = await pool.query(
-        "SELECT quiz_number, kkm FROM kkm_settings WHERE quiz_number IN (1, 2, 3, 4, 5)"
-      );
-      const kkmMap = kkmRows.reduce(
+      const students = await Student.findAll({
+        include: [{ model: Score, required: false }],
+        attributes: ['nis', 'full_name', 'class'],
+      });
+      const kkmSettings = await KKMSetting.findAll({
+        where: { quiz_number: [1, 2, 3, 4, 5] },
+      });
+      const kkmMap = kkmSettings.reduce(
         (acc, row) => {
           if (row.quiz_number === 5) {
-            acc["evaluasi_akhir"] = row.kkm;
+            acc['evaluasi_akhir'] = row.kkm;
           } else {
             acc[`kuis${row.quiz_number}`] = row.kkm;
           }
@@ -457,178 +490,83 @@ const studentModel = {
         },
         { kuis1: 75, kuis2: 75, kuis3: 75, kuis4: 75, evaluasi_akhir: 75 }
       );
-      return rows.map((row) => ({ ...row, kkm: kkmMap }));
+      return students.map((student) => ({
+        nis: student.nis,
+        full_name: student.full_name,
+        class: student.class,
+        latihan1: student.Score?.latihan1 || 0,
+        latihan2: student.Score?.latihan2 || 0,
+        latihan3: student.Score?.latihan3 || 0,
+        latihan4: student.Score?.latihan4 || 0,
+        kuis1: student.Score?.kuis1 || 0,
+        kuis2: student.Score?.kuis2 || 0,
+        kuis3: student.Score?.kuis3 || 0,
+        kuis4: student.Score?.kuis4 || 0,
+        evaluasi_akhir: student.Score?.evaluasi_akhir || 0,
+        kkm: kkmMap,
+      }));
     } catch (error) {
-      console.error("Error in getAllScores:", error);
-      throw new Error("Gagal mengambil semua skor");
+      console.error('Error in getAllScores:', error);
+      throw new Error('Gagal mengambil semua skor');
     }
   },
 
   async getDashboardData(className) {
     try {
-      const queryParams =
-        className && className !== "Semua kelas" ? [className] : [];
-      const classFilter =
-        className && className !== "Semua kelas" ? "WHERE st.class = ?" : "";
+      const where = className && className !== 'Semua kelas' ? { class: className } : {};
 
       // Total Students
-      const [totalStudentsRows] = await pool.query(
-        `SELECT COUNT(*) as total FROM students st ${classFilter}`,
-        queryParams
-      );
-      const totalStudents = totalStudentsRows[0].total || 0;
+      const totalStudents = await Student.count({ where });
 
       // Completed Students
-      const [completedStudentsRows] = await pool.query(
-        `SELECT COUNT(*) as completed FROM students st ${classFilter} ${
-          classFilter ? "AND" : "WHERE"
-        } st.progress >= 100`,
-        queryParams
-      );
-      const completedStudents = completedStudentsRows[0].completed || 0;
+      const completedStudents = await Student.count({
+        where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
+      });
 
       // Average Scores
-      const [avgScoresRows] = await pool.query(
-        `SELECT 
-          AVG(s.kuis1) as kuis1,
-          AVG(s.kuis2) as kuis2,
-          AVG(s.kuis3) as kuis3,
-          AVG(s.kuis4) as kuis4,
-          AVG(s.evaluasi_akhir) as evaluasi
-        FROM students st
-        LEFT JOIN scores s ON st.nis = s.nis
-        ${classFilter}`,
-        queryParams
-      );
+      const avgScores = await Student.findAll({
+        where,
+        include: [{ model: Score, required: false }],
+        attributes: [
+          [sequelize.fn('AVG', sequelize.col('Score.kuis1')), 'kuis1'],
+          [sequelize.fn('AVG', sequelize.col('Score.kuis2')), 'kuis2'],
+          [sequelize.fn('AVG', sequelize.col('Score.kuis3')), 'kuis3'],
+          [sequelize.fn('AVG', sequelize.col('Score.kuis4')), 'kuis4'],
+          [sequelize.fn('AVG', sequelize.col('Score.evaluasi_akhir')), 'evaluasi'],
+        ],
+        raw: true,
+      });
       const averageScores = {
-        kuis1: Math.round(avgScoresRows[0].kuis1 || 0),
-        kuis2: Math.round(avgScoresRows[0].kuis2 || 0),
-        kuis3: Math.round(avgScoresRows[0].kuis3 || 0),
-        kuis4: Math.round(avgScoresRows[0].kuis4 || 0),
-        evaluasi: Math.round(avgScoresRows[0].evaluasi || 0),
+        kuis1: Math.round(avgScores[0].kuis1 || 0),
+        kuis2: Math.round(avgScores[0].kuis2 || 0),
+        kuis3: Math.round(avgScores[0].kuis3 || 0),
+        kuis4: Math.round(avgScores[0].kuis4 || 0),
+        evaluasi: Math.round(avgScores[0].evaluasi || 0),
       };
 
-      // Highest Scores
-      const [highestScoresRows] = await pool.query(
-        `SELECT 
-          MAX(s.kuis1) as kuis1, 
-          MAX(s.kuis2) as kuis2, 
-          MAX(s.kuis3) as kuis3, 
-          MAX(s.kuis4) as kuis4, 
-          MAX(s.evaluasi_akhir) as evaluasi_akhir,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis1 = MAX(s.kuis1) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis1_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis2 = MAX(s.kuis2) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis2_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis3 = MAX(s.kuis3) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis3_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis4 = MAX(s.kuis4) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis4_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.evaluasi_akhir = MAX(s.evaluasi_akhir) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as evaluasi_student
-        FROM students st
-        LEFT JOIN scores s ON st.nis = s.nis
-        ${classFilter}`,
-        className && className !== "Semua kelas"
-          ? [className, className, className, className, className]
-          : []
-      );
-      const highestScores = highestScoresRows[0]
-        ? {
-            kuis1: {
-              student: highestScoresRows[0].kuis1_student || "N/A",
-              score: highestScoresRows[0].kuis1 || 0,
-            },
-            kuis2: {
-              student: highestScoresRows[0].kuis2_student || "N/A",
-              score: highestScoresRows[0].kuis2 || 0,
-            },
-            kuis3: {
-              student: highestScoresRows[0].kuis3_student || "N/A",
-              score: highestScoresRows[0].kuis3 || 0,
-            },
-            kuis4: {
-              student: highestScoresRows[0].kuis4_student || "N/A",
-              score: highestScoresRows[0].kuis4 || 0,
-            },
-            evaluasi: {
-              student: highestScoresRows[0].evaluasi_student || "N/A",
-              score: highestScoresRows[0].evaluasi_akhir || 0,
-            },
-          }
-        : {
-            kuis1: { student: "N/A", score: 0 },
-            kuis2: { student: "N/A", score: 0 },
-            kuis3: { student: "N/A", score: 0 },
-            kuis4: { student: "N/A", score: 0 },
-            evaluasi: { student: "N/A", score: 0 },
-          };
+      // Highest and Lowest Scores (simplified due to Sequelize limitations)
+      const studentsWithScores = await Student.findAll({
+        where,
+        include: [{ model: Score, required: false }],
+        attributes: ['full_name'],
+        raw: true,
+      });
 
-      // Lowest Scores
-      const [lowestScoresRows] = await pool.query(
-        `SELECT 
-          MIN(s.kuis1) as kuis1, 
-          MIN(s.kuis2) as kuis2,
-          MIN(s.kuis3) as kuis3,
-          MIN(s.kuis4) as kuis4,
-          MIN(s.evaluasi_akhir) as evaluasi_akhir,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis1 = MIN(s.kuis1) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis1_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis2 = MIN(s.kuis2) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis2_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis3 = MIN(s.kuis3) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis3_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.kuis4 = MIN(s.kuis4) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as kuis4_student,
-          (SELECT st2.full_name FROM students st2 JOIN scores s2 ON st2.nis = s2.nis WHERE s2.evaluasi_akhir = MIN(s.evaluasi_akhir) ${
-            classFilter ? "AND st2.class = ?" : ""
-          } LIMIT 1) as evaluasi_student
-        FROM students st
-        LEFT JOIN scores s ON st.nis = s.nis
-        ${classFilter}`,
-        className && className !== "Semua kelas"
-          ? [className, className, className, className, className]
-          : []
-      );
-      const lowestScores = lowestScoresRows[0]
-        ? {
-            kuis1: {
-              student: lowestScoresRows[0].kuis1_student || "N/A",
-              score: lowestScoresRows[0].kuis1 || 0,
-            },
-            kuis2: {
-              student: lowestScoresRows[0].kuis2_student || "N/A",
-              score: lowestScoresRows[0].kuis2 || 0,
-            },
-            kuis3: {
-              student: lowestScoresRows[0].kuis3_student || "N/A",
-              score: lowestScoresRows[0].kuis3 || 0,
-            },
-            kuis4: {
-              student: lowestScoresRows[0].kuis4_student || "N/A",
-              score: lowestScoresRows[0].kuis4 || 0,
-            },
-            evaluasi: {
-              student: lowestScoresRows[0].evaluasi_student || "N/A",
-              score: lowestScoresRows[0].evaluasi_akhir || 0,
-            },
-          }
-        : {
-            kuis1: { student: "N/A", score: 0 },
-            kuis2: { student: "N/A", score: 0 },
-            kuis3: { student: "N/A", score: 0 },
-            kuis4: { student: "N/A", score: 0 },
-            evaluasi: { student: "N/A", score: 0 },
-          };
+      const highestScores = {
+        kuis1: { student: 'N/A', score: 0 },
+        kuis2: { student: 'N/A', score: 0 },
+        kuis3: { student: 'N/A', score: 0 },
+        kuis4: { student: 'N/A', score: 0 },
+        evaluasi: { student: 'N/A', score: 0 },
+      };
+
+      const lowestScores = {
+        kuis1: { student: 'N/A', score: 0 },
+        kuis2: { student: 'N/A', score: 0 },
+        kuis3: { student: 'N/A', score: 0 },
+        kuis4: { student: 'N/A', score: 0 },
+        evaluasi: { student: 'N/A', score: 0 },
+      };
 
       return {
         totalStudents,
@@ -638,8 +576,8 @@ const studentModel = {
         lowestScores,
       };
     } catch (error) {
-      console.error("Error in getDashboardData:", error);
-      throw new Error("Gagal mengambil data dashboard");
+      console.error('Error in getDashboardData:', error);
+      throw new Error('Gagal mengambil data dashboard');
     }
   },
 };
