@@ -5,7 +5,8 @@ import studentRoutes from "./Route/SiswaRoute.js";
 import teacherRoutes from "./Route/GuruRoute.js";
 import quizRoutes from "./Route/QuizRoute.js";
 import kkmRoutes from "./Route/KkmRoute.js";
-import apiRoutes from "./Route/apiRoutes.js"; // Add this line
+import apiRoutes from "./Route/apiRoutes.js";
+import { sequelize } from "./config/database.js"; // Assuming you have a Sequelize config file
 
 config();
 
@@ -27,7 +28,7 @@ app.use("/api/students", studentRoutes);
 app.use("/api/teachers", teacherRoutes);
 app.use("/api/quizzes", quizRoutes);
 app.use("/api/kkm", kkmRoutes);
-app.use("/api", apiRoutes); // Mount the apiRoutes to handle /api/verify-token
+app.use("/api", apiRoutes);
 
 // Error handling
 app.use((err, req, res, next) => {
@@ -35,7 +36,22 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
+// Database synchronization
+const syncDatabase = async () => {
+  try {
+    // Sync all defined models to the database
+    await sequelize.sync({ alter: true }); // Use { alter: true } to update schema without dropping tables
+    console.log("Database synchronized successfully.");
+  } catch (error) {
+    console.error("Error synchronizing database:", error);
+    process.exit(1); // Exit process if sync fails to prevent running with an inconsistent DB
+  }
+};
+
+// Start server after database sync
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+syncDatabase().then(() => {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
 });
