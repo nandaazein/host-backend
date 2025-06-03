@@ -1,149 +1,165 @@
-import { DataTypes } from 'sequelize';
-import { sequelize } from '../Database/DB.js';
-import bcrypt from 'bcryptjs';
+import { DataTypes, Sequelize } from "sequelize";
+import { sequelize } from "../Database/DB.js";
+import bcrypt from "bcryptjs";
 
-const Student = sequelize.define('Student', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+const Student = sequelize.define(
+  "Student",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    nis: {
+      type: DataTypes.STRING,
+      unique: true,
+      allowNull: false,
+    },
+    full_name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    class: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    password: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    status: {
+      type: DataTypes.STRING,
+      defaultValue: "BELUM SELESAI",
+    },
+    progress: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0, // Perbaikan: hapus tanda kutip tunggal
+    },
+    role: {
+      type: DataTypes.STRING,
+      defaultValue: "student",
+    },
+    quiz1_completed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    quiz2_completed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    quiz3_completed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    quiz4_completed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
+    evaluation_completed: {
+      type: DataTypes.INTEGER,
+      defaultValue: 0,
+    },
   },
-  nis: {
-    type: DataTypes.STRING,
-    unique: true,
-    allowNull: false,
-  },
-  full_name: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  class: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  password: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  status: {
-    type: DataTypes.STRING,
-    defaultValue: 'BELUM SELESAI',
-  },
-  progress: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0',
-  },
-  role: {
-    type: DataTypes.STRING,
-    defaultValue: 'student',
-  },
-  quiz1_completed: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  quiz2_completed: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  quiz3_completed: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  quiz4_completed: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-  evaluation_completed: {
-    type: DataTypes.INTEGER,
-    defaultValue: 0,
-  },
-}, {
-  tableName: 'students',
-  timestamps: true,
-});
+  {
+    tableName: "students",
+    timestamps: true,
+  }
+);
 
-const Score = sequelize.define('Score', {
-  nis: {
-    type: DataTypes.STRING,
-    primaryKey: true,
+const Score = sequelize.define(
+  "Score",
+  {
+    nis: {
+      type: DataTypes.STRING,
+      primaryKey: true,
+    },
+    kuis1: {
+      type: DataTypes.INTEGER,
+    },
+    kuis2: {
+      type: DataTypes.INTEGER,
+    },
+    kuis3: {
+      type: DataTypes.INTEGER,
+    },
+    kuis4: {
+      type: DataTypes.INTEGER, // Perbaikan: ubah dari DataTypes: INTEGER
+    },
+    latihan1: {
+      type: DataTypes.INTEGER,
+    },
+    latihan2: {
+      type: DataTypes.INTEGER,
+    },
+    latihan3: {
+      type: DataTypes.INTEGER,
+    },
+    latihan4: {
+      type: DataTypes.INTEGER,
+    },
+    evaluasi_akhir: {
+      type: DataTypes.INTEGER,
+    },
   },
-  kuis1: {
-    type: DataTypes.INTEGER,
-  },
-  kuis2: {
-    type: DataTypes.INTEGER,
-  },
-  kuis3: {
-    type: DataTypes.INTEGER,
-  },
-  kuis4: {
-    DataTypes: INTEGER,
-  },
-  latihan1: {
-    type: DataTypes.INTEGER,
-  },
-  latihan2: {
-    type: DataTypes.INTEGER,
-  },
-  latihan3: {
-    type: DataTypes.INTEGER,
-  },
-  latihan4: {
-    type: DataTypes.INTEGER,
-  },
-  evaluasi_akhir: {
-    type: DataTypes.INTEGER,
-  },
-}, {
-  tableName: 'scores',
-  timestamps: true,
-});
+  {
+    tableName: "scores",
+    timestamps: true,
+  }
+);
 
-const QuizAttempt = sequelize.define('QuizAttempt', {
-  id: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
-    autoIncrement: true,
+const QuizAttempt = sequelize.define(
+  "QuizAttempt",
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    nis: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    quiz_number: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    score: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
+    attempt_time: {
+      type: DataTypes.DATE,
+      defaultValue: DataTypes.NOW,
+    },
   },
-  nis: {
-    type: DataTypes.STRING,
-    allowNull: false,
-  },
-  quiz_number: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  score: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-  attempt_time: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
-  },
-}, {
-  tableName: 'quiz_attempts',
-  timestamps: false,
-});
+  {
+    tableName: "quiz_attempts",
+    timestamps: false,
+  }
+);
 
-const KKMSetting = sequelize.define('KKMSetting', {
-  quiz_number: {
-    type: DataTypes.INTEGER,
-    primaryKey: true,
+const KKMSetting = sequelize.define(
+  "KKMSetting",
+  {
+    quiz_number: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+    },
+    kkm: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
   },
-  kkm: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-}, {
-  tableName: 'kkm_settings',
-  timestamps: true,
-});
+  {
+    tableName: "kkm_settings",
+    timestamps: true,
+  }
+);
 
-Student.hasOne(Score, { foreignKey: 'nis', sourceKey: 'nis' });
-Score.belongsTo(Student, { foreignKey: 'nis', targetKey: 'nis' });
-Student.hasMany(QuizAttempt, { foreignKey: 'nis', sourceKey: 'nis' });
-QuizAttempt.belongsTo(Student, { foreignKey: 'nis', targetKey: 'nis' });
+Student.hasOne(Score, { foreignKey: "nis", sourceKey: "nis" });
+Score.belongsTo(Student, { foreignKey: "nis", targetKey: "nis" });
+Student.hasMany(QuizAttempt, { foreignKey: "nis", sourceKey: "nis" });
+QuizAttempt.belongsTo(Student, { foreignKey: "nis", targetKey: "nis" });
 
 const studentModel = {
   async findByNIS(nis) {
@@ -156,14 +172,14 @@ const studentModel = {
 
   async register({ nis, name, className, password, confirmPassword, token }) {
     if (password !== confirmPassword) {
-      throw new Error('Kata sandi tidak cocok');
+      throw new Error("Kata sandi tidak cocok");
     }
-    if (token !== '123') {
-      throw new Error('Token tidak valid');
+    if (token !== "123") {
+      throw new Error("Token tidak valid");
     }
     const existingStudent = await this.findByNIS(nis);
     if (existingStudent) {
-      throw new Error('NIS sudah terdaftar');
+      throw new Error("NIS sudah terdaftar");
     }
     const hashedPassword = await bcrypt.hash(password, 10);
     await Student.create({
@@ -171,9 +187,9 @@ const studentModel = {
       full_name: name,
       class: className,
       password: hashedPassword,
-      status: 'BELUM SELESAI',
+      status: "BELUM SELESAI",
       progress: 0,
-      role: 'student',
+      role: "student",
     });
   },
 
@@ -195,55 +211,52 @@ const studentModel = {
   async getAllStudents() {
     try {
       return await Student.findAll({
-        attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+        attributes: ["nis", "full_name", "class", "status", "progress"],
       });
     } catch (error) {
-      console.error('Error in getAllStudents:', error);
+      console.error("Error in getAllStudents:", error);
       throw error;
     }
   },
 
   async getClasses() {
     const students = await Student.findAll({
-      attributes: [[sequelize.fn('DISTINCT', sequelize.col('class')), 'class']],
-      order: [['class', 'ASC']],
+      attributes: [[sequelize.fn("DISTINCT", sequelize.col("class")), "class"]],
+      order: [["class", "ASC"]],
     });
     return students.map((row) => row.class);
   },
 
   async updateProgress(nis, progress) {
     if (isNaN(progress) || progress < 0) {
-      throw new Error('Progres tidak valid (harus angka positif)');
+      throw new Error("Progres tidak valid (harus angka positif)");
     }
     const student = await Student.findOne({ where: { nis } });
     if (!student) {
-      throw new Error('Siswa tidak ditemukan');
+      throw new Error("Siswa tidak ditemukan");
     }
     const currentProgress = student.progress || 0;
     const newProgress = Math.min(currentProgress + progress, 100);
-    const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+    const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
     await student.update({ progress: newProgress, status });
     return await Student.findOne({
       where: { nis },
-      attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+      attributes: ["nis", "full_name", "class", "status", "progress"],
     });
   },
 
   async updateStudent(nis, { full_name, class: className }) {
-    await Student.update(
-      { full_name, class: className },
-      { where: { nis } }
-    );
+    await Student.update({ full_name, class: className }, { where: { nis } });
     return await Student.findOne({
       where: { nis },
-      attributes: ['nis', 'full_name', 'class', 'status', 'progress'],
+      attributes: ["nis", "full_name", "class", "status", "progress"],
     });
   },
 
   async getProgress(nis) {
     const student = await Student.findOne({
       where: { nis },
-      attributes: ['progress'],
+      attributes: ["progress"],
     });
     return student || { progress: 0 };
   },
@@ -251,7 +264,7 @@ const studentModel = {
   async deleteStudent(nis) {
     const student = await this.findByNIS(nis);
     if (!student) {
-      throw new Error('Siswa tidak ditemukan');
+      throw new Error("Siswa tidak ditemukan");
     }
     await Student.destroy({ where: { nis } });
   },
@@ -273,7 +286,7 @@ const studentModel = {
     try {
       const student = await Student.findOne({ where: { nis }, transaction });
       if (!student) {
-        throw new Error('Siswa tidak ditemukan');
+        throw new Error("Siswa tidak ditemukan");
       }
 
       // Log quiz attempts
@@ -363,7 +376,7 @@ const studentModel = {
 
       if (progressToAdd > 0) {
         const newProgress = Math.min(student.progress + progressToAdd, 100);
-        const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+        const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
         await student.update(
           { progress: newProgress, status, ...quizUpdates },
           { transaction }
@@ -382,7 +395,7 @@ const studentModel = {
     try {
       const student = await Student.findOne({ where: { nis }, transaction });
       if (!student) {
-        throw new Error('Siswa tidak ditemukan');
+        throw new Error("Siswa tidak ditemukan");
       }
 
       const currentScore = await Score.findOne({ where: { nis }, transaction });
@@ -394,10 +407,7 @@ const studentModel = {
 
       if (score > (currentScore?.evaluasi_akhir || 0)) {
         if (currentScore) {
-          await currentScore.update(
-            { evaluasi_akhir: score },
-            { transaction }
-          );
+          await currentScore.update({ evaluasi_akhir: score }, { transaction });
         } else {
           await Score.create({ nis, evaluasi_akhir: score }, { transaction });
         }
@@ -405,7 +415,7 @@ const studentModel = {
 
       if (score >= kkm && student.evaluation_completed === 0) {
         const newProgress = Math.min(student.progress + 20, 100);
-        const status = newProgress >= 100 ? 'SELESAI' : 'BELUM SELESAI';
+        const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
         await student.update(
           { progress: newProgress, status, evaluation_completed: 1 },
           { transaction }
@@ -429,7 +439,7 @@ const studentModel = {
       const kkmMap = kkmSettings.reduce(
         (acc, row) => {
           if (row.quiz_number === 5) {
-            acc['evaluasi_akhir'] = row.kkm;
+            acc["evaluasi_akhir"] = row.kkm;
           } else {
             acc[`kuis${row.quiz_number}`] = row.kkm;
           }
@@ -439,8 +449,8 @@ const studentModel = {
       );
       return { ...score?.dataValues, kkm: kkmMap };
     } catch (error) {
-      console.error('Error in getScores:', error);
-      throw new Error('Gagal mengambil skor siswa');
+      console.error("Error in getScores:", error);
+      throw new Error("Gagal mengambil skor siswa");
     }
   },
 
@@ -451,12 +461,12 @@ const studentModel = {
         include: [
           {
             model: KKMSetting,
-            attributes: ['kkm'],
-            where: { quiz_number: sequelize.col('QuizAttempt.quiz_number') },
+            attributes: ["kkm"],
+            where: { quiz_number: sequelize.col("QuizAttempt.quiz_number") },
             required: false,
           },
         ],
-        order: [['attempt_time', 'DESC']],
+        order: [["attempt_time", "DESC"]],
       });
       return attempts.map((row) => ({
         quizNumber: row.quiz_number,
@@ -465,8 +475,8 @@ const studentModel = {
         kkm: row.KKMSetting?.kkm || 75,
       }));
     } catch (error) {
-      console.error('Error in getQuizAttempts:', error);
-      throw new Error('Gagal mengambil riwayat kuis');
+      console.error("Error in getQuizAttempts:", error);
+      throw new Error("Gagal mengambil riwayat kuis");
     }
   },
 
@@ -474,7 +484,7 @@ const studentModel = {
     try {
       const students = await Student.findAll({
         include: [{ model: Score, required: false }],
-        attributes: ['nis', 'full_name', 'class'],
+        attributes: ["nis", "full_name", "class"],
       });
       const kkmSettings = await KKMSetting.findAll({
         where: { quiz_number: [1, 2, 3, 4, 5] },
@@ -482,7 +492,7 @@ const studentModel = {
       const kkmMap = kkmSettings.reduce(
         (acc, row) => {
           if (row.quiz_number === 5) {
-            acc['evaluasi_akhir'] = row.kkm;
+            acc["evaluasi_akhir"] = row.kkm;
           } else {
             acc[`kuis${row.quiz_number}`] = row.kkm;
           }
@@ -506,14 +516,15 @@ const studentModel = {
         kkm: kkmMap,
       }));
     } catch (error) {
-      console.error('Error in getAllScores:', error);
-      throw new Error('Gagal mengambil semua skor');
+      console.error("Error in getAllScores:", error);
+      throw new Error("Gagal mengambil semua skor");
     }
   },
 
   async getDashboardData(className) {
     try {
-      const where = className && className !== 'Semua kelas' ? { class: className } : {};
+      const where =
+        className && className !== "Semua kelas" ? { class: className } : {};
 
       // Total Students
       const totalStudents = await Student.count({ where });
@@ -528,11 +539,14 @@ const studentModel = {
         where,
         include: [{ model: Score, required: false }],
         attributes: [
-          [sequelize.fn('AVG', sequelize.col('Score.kuis1')), 'kuis1'],
-          [sequelize.fn('AVG', sequelize.col('Score.kuis2')), 'kuis2'],
-          [sequelize.fn('AVG', sequelize.col('Score.kuis3')), 'kuis3'],
-          [sequelize.fn('AVG', sequelize.col('Score.kuis4')), 'kuis4'],
-          [sequelize.fn('AVG', sequelize.col('Score.evaluasi_akhir')), 'evaluasi'],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis1")), "kuis1"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis2")), "kuis2"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis3")), "kuis3"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis4")), "kuis4"],
+          [
+            sequelize.fn("AVG", sequelize.col("Score.evaluasi_akhir")),
+            "evaluasi",
+          ],
         ],
         raw: true,
       });
@@ -548,24 +562,24 @@ const studentModel = {
       const studentsWithScores = await Student.findAll({
         where,
         include: [{ model: Score, required: false }],
-        attributes: ['full_name'],
+        attributes: ["full_name"],
         raw: true,
       });
 
       const highestScores = {
-        kuis1: { student: 'N/A', score: 0 },
-        kuis2: { student: 'N/A', score: 0 },
-        kuis3: { student: 'N/A', score: 0 },
-        kuis4: { student: 'N/A', score: 0 },
-        evaluasi: { student: 'N/A', score: 0 },
+        kuis1: { student: "N/A", score: 0 },
+        kuis2: { student: "N/A", score: 0 },
+        kuis3: { student: "N/A", score: 0 },
+        kuis4: { student: "N/A", score: 0 },
+        evaluasi: { student: "N/A", score: 0 },
       };
 
       const lowestScores = {
-        kuis1: { student: 'N/A', score: 0 },
-        kuis2: { student: 'N/A', score: 0 },
-        kuis3: { student: 'N/A', score: 0 },
-        kuis4: { student: 'N/A', score: 0 },
-        evaluasi: { student: 'N/A', score: 0 },
+        kuis1: { student: "N/A", score: 0 },
+        kuis2: { student: "N/A", score: 0 },
+        kuis3: { student: "N/A", score: 0 },
+        kuis4: { student: "N/A", score: 0 },
+        evaluasi: { student: "N/A", score: 0 },
       };
 
       return {
@@ -576,8 +590,8 @@ const studentModel = {
         lowestScores,
       };
     } catch (error) {
-      console.error('Error in getDashboardData:', error);
-      throw new Error('Gagal mengambil data dashboard');
+      console.error("Error in getDashboardData:", error);
+      throw new Error("Gagal mengambil data dashboard");
     }
   },
 };
