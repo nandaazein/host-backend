@@ -33,7 +33,7 @@ const Student = sequelize.define(
     },
     progress: {
       type: DataTypes.INTEGER,
-      defaultValue: 0, // Perbaikan: hapus tanda kutip tunggal
+      defaultValue: 0, // Fixed: Removed single quote
     },
     role: {
       type: DataTypes.STRING,
@@ -83,7 +83,7 @@ const Score = sequelize.define(
       type: DataTypes.INTEGER,
     },
     kuis4: {
-      type: DataTypes.INTEGER, // Perbaikan: ubah dari DataTypes: INTEGER
+      type: DataTypes.INTEGER, // Fixed: Changed from DataTypes: INTEGER
     },
     latihan1: {
       type: DataTypes.INTEGER,
@@ -289,7 +289,6 @@ const studentModel = {
         throw new Error("Siswa tidak ditemukan");
       }
 
-      // Log quiz attempts
       if (kuis1 !== undefined) {
         await QuizAttempt.create(
           { nis, quiz_number: 1, score: kuis1 },
@@ -526,15 +525,12 @@ const studentModel = {
       const where =
         className && className !== "Semua kelas" ? { class: className } : {};
 
-      // Total Students
       const totalStudents = await Student.count({ where });
 
-      // Completed Students
       const completedStudents = await Student.count({
         where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
       });
 
-      // Average Scores
       const avgScores = await Student.findAll({
         where,
         include: [{ model: Score, required: false }],
@@ -557,14 +553,6 @@ const studentModel = {
         kuis4: Math.round(avgScores[0].kuis4 || 0),
         evaluasi: Math.round(avgScores[0].evaluasi || 0),
       };
-
-      // Highest and Lowest Scores (simplified due to Sequelize limitations)
-      const studentsWithScores = await Student.findAll({
-        where,
-        include: [{ model: Score, required: false }],
-        attributes: ["full_name"],
-        raw: true,
-      });
 
       const highestScores = {
         kuis1: { student: "N/A", score: 0 },

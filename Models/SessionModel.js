@@ -1,6 +1,8 @@
-import { DataTypes } from "sequelize";
+import { DataTypes, Sequelize } from "sequelize";
 import { sequelize } from "../Database/DB.js";
 import crypto from "crypto";
+import { Student } from "./SiswaModel.js";
+import { Teacher } from "./GuruModel.js";
 
 const Session = sequelize.define(
   "Session",
@@ -31,7 +33,7 @@ const Session = sequelize.define(
 const sessionModel = {
   async create(userId, role) {
     const sessionId = crypto.randomBytes(64).toString("hex");
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 hari
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
     await Session.create({
       id: sessionId,
       user_id: userId,

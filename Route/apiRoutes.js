@@ -1,8 +1,8 @@
 import express from "express";
-import { verifyToken } from "../Middleware/verifyToken.js"; // Ensure path is correct
+import { verifyTokenRoute } from "../Middleware/verifyToken.js";
 
 const router = express.Router();
 
-router.get("/verify-token", verifyToken);
+router.get("/verify-token", verifyTokenRoute);
 
 export default router;

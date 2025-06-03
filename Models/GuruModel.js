@@ -2,7 +2,7 @@ import { DataTypes } from "sequelize";
 import { sequelize } from "../Database/DB.js";
 import bcrypt from "bcryptjs";
 
-const Teacher = sequelize.define(
+export const Teacher = sequelize.define(
   "Teacher",
   {
     id: {
