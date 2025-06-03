@@ -520,68 +520,69 @@ const studentModel = {
     }
   },
 
-  async getDashboardData(className) {
-    try {
-      const where =
-        className && className !== "Semua kelas" ? { class: className } : {};
+async getDashboardData(className) {
+  try {
+    const where = className && className !== 'Semua kelas' ? { class: className } : {};
 
-      const totalStudents = await Student.count({ where });
+    // Count total students
+    const totalStudents = await Student.count({ where });
 
-      const completedStudents = await Student.count({
-        where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
-      });
+    // Count completed students (progress >= 100)
+    const completedStudents = await Student.count({
+      where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
+    });
 
-      const avgScores = await Student.findAll({
-        where,
-        include: [{ model: Score, required: false }],
-        attributes: [
-          [sequelize.fn("AVG", sequelize.col("Score.kuis1")), "kuis1"],
-          [sequelize.fn("AVG", sequelize.col("Score.kuis2")), "kuis2"],
-          [sequelize.fn("AVG", sequelize.col("Score.kuis3")), "kuis3"],
-          [sequelize.fn("AVG", sequelize.col("Score.kuis4")), "kuis4"],
-          [
-            sequelize.fn("AVG", sequelize.col("Score.evaluasi_akhir")),
-            "evaluasi",
-          ],
-        ],
-        raw: true,
-      });
-      const averageScores = {
-        kuis1: Math.round(avgScores[0].kuis1 || 0),
-        kuis2: Math.round(avgScores[0].kuis2 || 0),
-        kuis3: Math.round(avgScores[0].kuis3 || 0),
-        kuis4: Math.round(avgScores[0].kuis4 || 0),
-        evaluasi: Math.round(avgScores[0].evaluasi || 0),
-      };
+    // Calculate average scores
+    const avgScores = await Student.findAll({
+      where,
+      include: [{ model: Score, required: false }],
+      attributes: [
+        [sequelize.fn('AVG', sequelize.col('Score.kuis1')), 'kuis1'],
+        [sequelize.fn('AVG', sequelize.col('Score.kuis2')), 'kuis2'],
+        [sequelize.fn('AVG', sequelize.col('Score.kuis3')), 'kuis3'],
+        [sequelize.fn('AVG', sequelize.col('Score.kuis4')), 'kuis4'],
+        [sequelize.fn('AVG', sequelize.col('Score.evaluasi_akhir')), 'evaluasi'],
+      ],
+      raw: true,
+    });
 
-      const highestScores = {
-        kuis1: { student: "N/A", score: 0 },
-        kuis2: { student: "N/A", score: 0 },
-        kuis3: { student: "N/A", score: 0 },
-        kuis4: { student: "N/A", score: 0 },
-        evaluasi: { student: "N/A", score: 0 },
-      };
+    const averageScores = {
+      kuis1: Math.round(avgScores[0].kuis1 || 0),
+      kuis2: Math.round(avgScores[0].kuis2 || 0),
+      kuis3: Math.round(avgScores[0].kuis3 || 0),
+      kuis4: Math.round(avgScores[0].kuis4 || 0),
+      evaluasi: Math.round(avgScores[0].evaluasi || 0),
+    };
 
-      const lowestScores = {
-        kuis1: { student: "N/A", score: 0 },
-        kuis2: { student: "N/A", score: 0 },
-        kuis3: { student: "N/A", score: 0 },
-        kuis4: { student: "N/A", score: 0 },
-        evaluasi: { student: "N/A", score: 0 },
-      };
+    // Hardcoded highest and lowest scores (as per frontend)
+    const highestScores = {
+      kuis1: { student: 'N/A', score: 0 },
+      kuis2: { student: 'N/A', score: 0 },
+      kuis3: { student: 'N/A', score: 0 },
+      kuis4: { student: 'N/A', score: 0 },
+      evaluasi: { student: 'N/A', score: 0 },
+    };
 
-      return {
-        totalStudents,
-        completedStudents,
-        averageScores,
-        highestScores,
-        lowestScores,
-      };
-    } catch (error) {
-      console.error("Error in getDashboardData:", error);
-      throw new Error("Gagal mengambil data dashboard");
-    }
-  },
+    const lowestScores = {
+      kuis1: { student: 'N/A', score: 0 },
+      kuis2: { student: 'N/A', score: 0 },
+      kuis3: { student: 'N/A', score: 0 },
+      kuis4: { student: 'N/A', score: 0 },
+      evaluasi: { student: 'N/A', score: 0 },
+    };
+
+    return {
+      totalStudents,
+      completedStudents,
+      averageScores,
+      highestScores,
+      lowestScores,
+    };
+  } catch (error) {
+    console.error('Error in getDashboardData:', error);
+    throw new Error('Gagal mengambil data dashboard');
+  }
+}
 };
 
 export default studentModel;
