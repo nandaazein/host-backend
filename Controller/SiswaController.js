@@ -275,6 +275,16 @@ const studentController = {
         .json({ message: "Kesalahan server", error: error.message });
     }
   },
+  async getQuizAttempts(req, res) {
+    try {
+      const { nis } = req.params;
+      const attempts = await studentModel.getQuizAttempts(nis);
+      res.json(attempts);
+    } catch (error) {
+      console.error("Get quiz attempts error:", error);
+      res.status(500).json({ message: error.message || "Kesalahan server" });
+    }
+  },
 };
 
 export default studentController;

@@ -64,4 +64,6 @@ router.get(
   studentController.getDashboardData
 );
 
+router.get("/quiz-attempts/:nis", studentController.getQuizAttempts);
+
 export default router;
