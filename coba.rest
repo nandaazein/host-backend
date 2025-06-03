@@ -1,0 +1,149 @@
+# Uji API AnalyticsLearn
+# Simpan sebagai api_tests.rest dan gunakan dengan ekstensi REST Client di VS Code
+# Setelah menjalankan Student Login atau Teacher Login, salin 'token' dari respons
+# dan tempel ke @token = <token_anda_di_sini>
+
+@host = http://localhost:5000
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6Miwicm9sZSI6InN0dWRlbnQiLCJpYXQiOjE3NDY1MzcyODQsImV4cCI6MTc0NjU0MDg4NH0.r1BVQ9xR9AwIFochr6LQPdyHmOw4zxOnTlZWuEt_lbo
+
+### Registrasi Siswa
+POST {{host}}/api/students/register
+Content-Type: application/json
+
+{
+  "nis": "COBA",
+  "fullName": "Faldi",
+  "password": "123",
+  "confirmPassword": "123",
+  "class": "10B",
+  "token": "123"
+}
+
+### Login Siswa
+# Salin 'token' dari respons dan atur @token di atas
+POST {{host}}/api/students/login
+Content-Type: application/json
+
+{
+  "nis": "COBA",
+  "password": "123"
+}
+
+### Registrasi Guru
+POST {{host}}/api/teachers/register
+Content-Type: application/json
+
+{
+  "nip": "COBA",
+  "fullName": "Jane Smith",
+  "school": "SMA Negeri 1",
+  "password": "123",
+  "confirmPassword": "123"
+}
+
+### Login Guru
+# Salin 'token' dari respons dan atur @token di atas
+POST {{host}}/api/teachers/login
+Content-Type: application/json
+
+{
+  "nip": "COBA",
+  "password": "123"
+}
+
+### Ambil Semua Siswa (Butuh Token Guru)
+GET {{host}}/api/students
+Authorization: Bearer {{token}}
+
+### Ambil Daftar Kelas (Butuh Token Guru)
+GET {{host}}/api/students/classes
+Authorization: Bearer {{token}}
+
+### Perbarui Progres Siswa oleh Guru (Butuh Token Guru)
+PUT {{host}}/api/students/COBA/progress
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "progress": 100
+}
+
+### Perbarui Progres Siswa oleh Siswa (Butuh Token Siswa)
+POST {{host}}/api/students/progress
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "progress": 100
+}
+
+### Hapus Siswa (Butuh Token Guru)
+DELETE {{host}}/api/students/COBA
+Authorization: Bearer {{token}}
+
+### Tambah atau Perbarui Skor Siswa (Butuh Token Guru)
+POST {{host}}/api/scores/COBA
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "latihan1": 80.5,
+  "latihan2": 85.0,
+  "latihan3": 90.0,
+  "latihan4": 95.0,
+  "kuis1": 70.0,
+  "kuis2": 75.0,
+  "kuis3": 80.0,
+  "kuis4": 85.0,
+  "evaluasi_akhir": 90.0
+}
+
+### Ambil Skor Siswa (Butuh Token Guru atau Siswa)
+GET {{host}}/api/scores/COBA
+Authorization: Bearer {{token}}
+
+### Ambil Semua Skor (Butuh Token Guru)
+GET {{host}}/api/scores
+Authorization: Bearer {{token}}
+
+### Tambah Soal (Butuh Token Guru)
+POST {{host}}/api/questions
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "quizNumber": 1,
+  "question": "Apa ibu kota Indonesia?",
+  "options": ["Jakarta", "Bandung", "Surabaya", "Medan"],
+  "correctAnswer": "Jakarta",
+  "imageUrl": null
+}
+
+### Ambil Semua Soal (Butuh Token Guru atau Siswa)
+GET {{host}}/api/questions
+Authorization: Bearer {{token}}
+
+### Ambil Soal Berdasarkan Quiz Number (Butuh Token Guru atau Siswa)
+GET {{host}}/api/questions?quizNumber=1
+Authorization: Bearer {{token}}
+
+### Ambil Soal Berdasarkan ID (Butuh Token Guru atau Siswa)
+GET {{host}}/api/questions/1
+Authorization: Bearer {{token}}
+
+### Perbarui Soal (Butuh Token Guru)
+PUT {{host}}/api/questions/1
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "quizNumber": 1,
+  "question": "Apa ibu kota Indonesia yang diperbarui?",
+  "options": ["Jakarta", "Bandung", "Surabaya", "Yogyakarta"],
+  "correctAnswer": "Jakarta",
+  "imageUrl": null
+}
+
+### Hapus Soal (Butuh Token Guru)
+DELETE {{host}}/api/questions/1
+Authorization: Bearer {{token}}
