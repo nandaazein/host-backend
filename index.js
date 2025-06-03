@@ -10,7 +10,10 @@ import teacherModel from "./Models/GuruModel.js";
 import studentModel from "./Models/SiswaModel.js";
 import kkmModel from "./Models/KkmModel.js";
 import quizModel from "./Models/QuizModel.js";
-import DB from "./Database/DB.js";
+import { sequelize } from "./Database/DB.js"; // Renamed DB to sequelize for clarity
+
+config();
+
 const app = express();
 
 // Middleware
@@ -37,15 +40,21 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Something went wrong!" });
 });
 
-try {
-  await DB.authenticate();
-  await GuruModel.sync();
-  await SiswaModel.sync();
-  await KkmModel.sync();
-  await QuizModel.sync();
-} catch (error) {
-  console.error(error);
-}
+// Database synchronization
+const syncDatabase = async () => {
+  try {
+    // Test database connection
+    await sequelize.authenticate();
+    console.log("Database connection established successfully.");
+
+    // Sync all models
+    await sequelize.sync({ alter: true }); // Updates schema without dropping tables
+    console.log("Database synchronized successfully.");
+  } catch (error) {
+    console.error("Error synchronizing database:", error);
+    process.exit(1); // Exit process if sync fails
+  }
+};
 
 // Start server after database sync
 const PORT = process.env.PORT || 5000;
