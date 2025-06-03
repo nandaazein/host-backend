@@ -520,69 +520,166 @@ const studentModel = {
     }
   },
 
-async getDashboardData(className) {
-  try {
-    const where = className && className !== 'Semua kelas' ? { class: className } : {};
+  async getDashboardData(className) {
+    try {
+      const where =
+        className && className !== "Semua kelas" ? { class: className } : {};
 
-    // Count total students
-    const totalStudents = await Student.count({ where });
+      // Menghitung total siswa
+      const totalStudents = await Student.count({ where });
 
-    // Count completed students (progress >= 100)
-    const completedStudents = await Student.count({
-      where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
-    });
+      // Menghitung siswa yang telah selesai (progres >= 100)
+      const completedStudents = await Student.count({
+        where: { ...where, progress: { [Sequelize.Op.gte]: 100 } },
+      });
 
-    // Calculate average scores
-    const avgScores = await Student.findAll({
-      where,
-      include: [{ model: Score, required: false }],
-      attributes: [
-        [sequelize.fn('AVG', sequelize.col('Score.kuis1')), 'kuis1'],
-        [sequelize.fn('AVG', sequelize.col('Score.kuis2')), 'kuis2'],
-        [sequelize.fn('AVG', sequelize.col('Score.kuis3')), 'kuis3'],
-        [sequelize.fn('AVG', sequelize.col('Score.kuis4')), 'kuis4'],
-        [sequelize.fn('AVG', sequelize.col('Score.evaluasi_akhir')), 'evaluasi'],
-      ],
-      raw: true,
-    });
+      // Menghitung rata-rata nilai
+      const avgScores = await Student.findAll({
+        where,
+        include: [{ model: Score, required: false }],
+        attributes: [
+          [sequelize.fn("AVG", sequelize.col("Score.kuis1")), "kuis1"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis2")), "kuis2"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis3")), "kuis3"],
+          [sequelize.fn("AVG", sequelize.col("Score.kuis4")), "kuis4"],
+          [
+            sequelize.fn("AVG", sequelize.col("Score.evaluasi_akhir")),
+            "evaluasi",
+          ],
+        ],
+        raw: true,
+      });
 
-    const averageScores = {
-      kuis1: Math.round(avgScores[0].kuis1 || 0),
-      kuis2: Math.round(avgScores[0].kuis2 || 0),
-      kuis3: Math.round(avgScores[0].kuis3 || 0),
-      kuis4: Math.round(avgScores[0].kuis4 || 0),
-      evaluasi: Math.round(avgScores[0].evaluasi || 0),
-    };
+      const averageScores = {
+        kuis1: Math.round(avgScores[0].kuis1 || 0),
+        kuis2: Math.round(avgScores[0].kuis2 || 0),
+        kuis3: Math.round(avgScores[0].kuis3 || 0),
+        kuis4: Math.round(avgScores[0].kuis4 || 0),
+        evaluasi: Math.round(avgScores[0].evaluasi || 0),
+      };
 
-    // Hardcoded highest and lowest scores (as per frontend)
-    const highestScores = {
-      kuis1: { student: 'N/A', score: 0 },
-      kuis2: { student: 'N/A', score: 0 },
-      kuis3: { student: 'N/A', score: 0 },
-      kuis4: { student: 'N/A', score: 0 },
-      evaluasi: { student: 'N/A', score: 0 },
-    };
+      // Menghitung nilai tertinggi dan terendah
+      const scoreData = await Student.findAll({
+        where,
+        include: [
+          {
+            model: Score,
+            required: false,
+            attributes: [
+              "nis",
+              "kuis1",
+              "kuis2",
+              "kuis3",
+              "kuis4",
+              "evaluasi_akhir",
+            ],
+          },
+        ],
+        attributes: ["nis", "full_name"],
+        raw: true,
+      });
 
-    const lowestScores = {
-      kuis1: { student: 'N/A', score: 0 },
-      kuis2: { student: 'N/A', score: 0 },
-      kuis3: { student: 'N/A', score: 0 },
-      kuis4: { student: 'N/A', score: 0 },
-      evaluasi: { student: 'N/A', score: 0 },
-    };
+      // Inisialisasi nilai tertinggi dan terendah
+      const highestScores = {
+        kuis1: { student: "N/A", score: 0 },
+        kuis2: { student: "N/A", score: 0 },
+        kuis3: { student: "N/A", score: 0 },
+        kuis4: { student: "N/A", score: 0 },
+        evaluasi: { student: "N/A", score: 0 },
+      };
 
-    return {
-      totalStudents,
-      completedStudents,
-      averageScores,
-      highestScores,
-      lowestScores,
-    };
-  } catch (error) {
-    console.error('Error in getDashboardData:', error);
-    throw new Error('Gagal mengambil data dashboard');
-  }
-}
+      const lowestScores = {
+        kuis1: { student: "N/A", score: null },
+        kuis2: { student: "N/A", score: null },
+        kuis3: { student: "N/A", score: null },
+        kuis4: { student: "N/A", score: null },
+        evaluasi: { student: "N/A", score: null },
+      };
+
+      // Memproses skor untuk menemukan tertinggi dan terendah
+      scoreData.forEach((row) => {
+        const studentName = row["full_name"] || "N/A";
+        const scores = {
+          kuis1: row["Score.kuis1"] || 0,
+          kuis2: row["Score.kuis2"] || 0,
+          kuis3: row["Score.kuis3"] || 0,
+          kuis4: row["Score.kuis4"] || 0,
+          evaluasi: row["Score.evaluasi_akhir"] || 0,
+        };
+
+        // Memperbarui nilai tertinggi
+        if (scores.kuis1 > highestScores.kuis1.score) {
+          highestScores.kuis1 = { student: studentName, score: scores.kuis1 };
+        }
+        if (scores.kuis2 > highestScores.kuis2.score) {
+          highestScores.kuis2 = { student: studentName, score: scores.kuis2 };
+        }
+        if (scores.kuis3 > highestScores.kuis3.score) {
+          highestScores.kuis3 = { student: studentName, score: scores.kuis3 };
+        }
+        if (scores.kuis4 > highestScores.kuis4.score) {
+          highestScores.kuis4 = { student: studentName, score: scores.kuis4 };
+        }
+        if (scores.evaluasi > highestScores.evaluasi.score) {
+          highestScores.evaluasi = {
+            student: studentName,
+            score: scores.evaluasi,
+          };
+        }
+
+        // Memperbarui nilai terendah (mengabaikan nilai null/undefined)
+        if (
+          scores.kuis1 !== null &&
+          (lowestScores.kuis1.score === null ||
+            scores.kuis1 < lowestScores.kuis1.score)
+        ) {
+          lowestScores.kuis1 = { student: studentName, score: scores.kuis1 };
+        }
+        if (
+          scores.kuis2 !== null &&
+          (lowestScores.kuis2.score === null ||
+            scores.kuis2 < lowestScores.kuis2.score)
+        ) {
+          lowestScores.kuis2 = { student: studentName, score: scores.kuis2 };
+        }
+        if (
+          scores.kuis3 !== null &&
+          (lowestScores.kuis3.score === null ||
+            scores.kuis3 < lowestScores.kuis3.score)
+        ) {
+          lowestScores.kuis3 = { student: studentName, score: scores.kuis3 };
+        }
+        if (
+          scores.kuis4 !== null &&
+          (lowestScores.kuis4.score === null ||
+            scores.kuis4 < lowestScores.kuis4.score)
+        ) {
+          lowestScores.kuis4 = { student: studentName, score: scores.kuis4 };
+        }
+        if (
+          scores.evaluasi !== null &&
+          (lowestScores.evaluasi.score === null ||
+            scores.evaluasi < lowestScores.evaluasi.score)
+        ) {
+          lowestScores.evaluasi = {
+            student: studentName,
+            score: scores.evaluasi,
+          };
+        }
+      });
+
+      return {
+        totalStudents,
+        completedStudents,
+        averageScores,
+        highestScores,
+        lowestScores,
+      };
+    } catch (error) {
+      console.error("Kesalahan dalam getDashboardData:", error);
+      throw new Error("Gagal mengambil data dashboard");
+    }
+  },
 };
 
 export default studentModel;
