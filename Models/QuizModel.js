@@ -26,7 +26,7 @@ const Question = sequelize.define(
       allowNull: false,
     },
     image_url: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT, // Changed from STRING to TEXT
     },
   },
   {
