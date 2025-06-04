@@ -63,7 +63,16 @@ router.get(
   restrictTo("teacher"),
   studentController.getDashboardData
 );
-
-router.get("/quiz-attempts/:nis", studentController.getQuizAttempts);
+router.get(
+  "/quiz-attempts/:nis",
+  verifyToken,
+  (req, res, next) => {
+    if (req.user.role === "teacher" || req.user.nis === req.params.nis) {
+      return next();
+    }
+    return res.status(403).json({ message: "Akses ditolak" });
+  },
+  studentController.getQuizAttempts
+);
 
 export default router;
