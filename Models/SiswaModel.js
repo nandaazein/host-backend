@@ -455,24 +455,29 @@ const studentModel = {
 
   async getQuizAttempts(nis) {
     try {
+      console.log(`Fetching quiz attempts for NIS: ${nis}`);
       const attempts = await QuizAttempt.findAll({
         where: { nis },
-        include: [
-          {
-            model: KKMSetting,
-            attributes: ["kkm"],
-            where: { quiz_number: sequelize.col("QuizAttempt.quiz_number") },
-            required: false,
-          },
-        ],
         order: [["attempt_time", "DESC"]],
       });
-      return attempts.map((row) => ({
-        quizNumber: row.quiz_number,
-        score: row.score || 0,
-        attemptTime: row.attempt_time,
-        kkm: row.KKMSetting?.kkm || 75,
-      }));
+      console.log("Attempts fetched:", attempts);
+
+      const attemptsWithKKM = await Promise.all(
+        attempts.map(async (row) => {
+          const kkmSetting = await KKMSetting.findOne({
+            where: { quiz_number: row.quiz_number },
+            attributes: ["kkm"],
+          });
+          return {
+            quizNumber: row.quiz_number,
+            score: row.score || 0,
+            attemptTime: row.attempt_time,
+            kkm: kkmSetting ? kkmSetting.kkm : 75,
+          };
+        })
+      );
+
+      return attemptsWithKKM;
     } catch (error) {
       console.error("Error in getQuizAttempts:", error);
       throw new Error("Gagal mengambil riwayat kuis");
