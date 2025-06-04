@@ -269,125 +269,254 @@ const studentModel = {
     await Student.destroy({ where: { nis } });
   },
 
+  // async submitScore(nis, scores) {
+  //   const {
+  //     kuis1,
+  //     kuis2,
+  //     kuis3,
+  //     kuis4,
+  //     latihan1,
+  //     latihan2,
+  //     latihan3,
+  //     latihan4,
+  //     evaluasi_akhir,
+  //   } = scores;
+
+  //   const transaction = await sequelize.transaction();
+  //   try {
+  //     const student = await Student.findOne({ where: { nis }, transaction });
+  //     if (!student) {
+  //       throw new Error("Siswa tidak ditemukan");
+  //     }
+
+  //     if (kuis1 !== undefined) {
+  //       await QuizAttempt.create(
+  //         { nis, quiz_number: 1, score: kuis1 },
+  //         { transaction }
+  //       );
+  //     }
+  //     if (kuis2 !== undefined) {
+  //       await QuizAttempt.create(
+  //         { nis, quiz_number: 2, score: kuis2 },
+  //         { transaction }
+  //       );
+  //     }
+  //     if (kuis3 !== undefined) {
+  //       await QuizAttempt.create(
+  //         { nis, quiz_number: 3, score: kuis3 },
+  //         { transaction }
+  //       );
+  //     }
+  //     if (kuis4 !== undefined) {
+  //       await QuizAttempt.create(
+  //         { nis, quiz_number: 4, score: kuis4 },
+  //         { transaction }
+  //       );
+  //     }
+
+  //     const currentScore = await Score.findOne({ where: { nis }, transaction });
+  //     const kkmSettings = await KKMSetting.findAll({
+  //       where: { quiz_number: [1, 2, 3, 4] },
+  //       transaction,
+  //     });
+  //     const kkmMap = kkmSettings.reduce(
+  //       (acc, row) => {
+  //         acc[row.quiz_number] = row.kkm;
+  //         return acc;
+  //       },
+  //       { 1: 70, 2: 70, 3: 70, 4: 70 }
+  //     );
+
+  //     const newScores = {
+  //       kuis1:
+  //         kuis1 !== undefined
+  //           ? Math.max(kuis1, currentScore?.kuis1 || 0)
+  //           : currentScore?.kuis1,
+  //       kuis2:
+  //         kuis2 !== undefined
+  //           ? Math.max(kuis2, currentScore?.kuis2 || 0)
+  //           : currentScore?.kuis2,
+  //       kuis3:
+  //         kuis3 !== undefined
+  //           ? Math.max(kuis3, currentScore?.kuis3 || 0)
+  //           : currentScore?.kuis3,
+  //       kuis4:
+  //         kuis4 !== undefined
+  //           ? Math.max(kuis4, currentScore?.kuis4 || 0)
+  //           : currentScore?.kuis4,
+  //       latihan1,
+  //       latihan2,
+  //       latihan3,
+  //       latihan4,
+  //       evaluasi_akhir,
+  //     };
+
+  //     let progressToAdd = 0;
+  //     const quizUpdates = {};
+  //     for (let i = 1; i <= 4; i++) {
+  //       const scoreKey = `kuis${i}`;
+  //       const completedKey = `quiz${i}_completed`;
+  //       const newScore = newScores[scoreKey];
+  //       if (
+  //         newScore !== undefined &&
+  //         newScore >= kkmMap[i] &&
+  //         student[completedKey] === 0
+  //       ) {
+  //         progressToAdd += 20;
+  //         quizUpdates[completedKey] = 1;
+  //       }
+  //     }
+
+  //     if (currentScore) {
+  //       await currentScore.update(newScores, { transaction });
+  //     } else {
+  //       await Score.create({ nis, ...newScores }, { transaction });
+  //     }
+
+  //     if (progressToAdd > 0) {
+  //       const newProgress = Math.min(student.progress + progressToAdd, 100);
+  //       const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
+  //       await student.update(
+  //         { progress: newProgress, status, ...quizUpdates },
+  //         { transaction }
+  //       );
+  //     }
+
+  //     await transaction.commit();
+  //   } catch (error) {
+  //     await transaction.rollback();
+  //     throw error;
+  //   }
+  // },
   async submitScore(nis, scores) {
-    const {
-      kuis1,
-      kuis2,
-      kuis3,
-      kuis4,
-      latihan1,
-      latihan2,
-      latihan3,
-      latihan4,
-      evaluasi_akhir,
-    } = scores;
+  const {
+    kuis1,
+    kuis2,
+    kuis3,
+    kuis4,
+    latihan1,
+    latihan2,
+    latihan3,
+    latihan4,
+    evaluasi_akhir,
+  } = scores;
 
-    const transaction = await sequelize.transaction();
-    try {
-      const student = await Student.findOne({ where: { nis }, transaction });
-      if (!student) {
-        throw new Error("Siswa tidak ditemukan");
-      }
-
-      if (kuis1 !== undefined) {
-        await QuizAttempt.create(
-          { nis, quiz_number: 1, score: kuis1 },
-          { transaction }
-        );
-      }
-      if (kuis2 !== undefined) {
-        await QuizAttempt.create(
-          { nis, quiz_number: 2, score: kuis2 },
-          { transaction }
-        );
-      }
-      if (kuis3 !== undefined) {
-        await QuizAttempt.create(
-          { nis, quiz_number: 3, score: kuis3 },
-          { transaction }
-        );
-      }
-      if (kuis4 !== undefined) {
-        await QuizAttempt.create(
-          { nis, quiz_number: 4, score: kuis4 },
-          { transaction }
-        );
-      }
-
-      const currentScore = await Score.findOne({ where: { nis }, transaction });
-      const kkmSettings = await KKMSetting.findAll({
-        where: { quiz_number: [1, 2, 3, 4] },
-        transaction,
-      });
-      const kkmMap = kkmSettings.reduce(
-        (acc, row) => {
-          acc[row.quiz_number] = row.kkm;
-          return acc;
-        },
-        { 1: 70, 2: 70, 3: 70, 4: 70 }
-      );
-
-      const newScores = {
-        kuis1:
-          kuis1 !== undefined
-            ? Math.max(kuis1, currentScore?.kuis1 || 0)
-            : currentScore?.kuis1,
-        kuis2:
-          kuis2 !== undefined
-            ? Math.max(kuis2, currentScore?.kuis2 || 0)
-            : currentScore?.kuis2,
-        kuis3:
-          kuis3 !== undefined
-            ? Math.max(kuis3, currentScore?.kuis3 || 0)
-            : currentScore?.kuis3,
-        kuis4:
-          kuis4 !== undefined
-            ? Math.max(kuis4, currentScore?.kuis4 || 0)
-            : currentScore?.kuis4,
-        latihan1,
-        latihan2,
-        latihan3,
-        latihan4,
-        evaluasi_akhir,
-      };
-
-      let progressToAdd = 0;
-      const quizUpdates = {};
-      for (let i = 1; i <= 4; i++) {
-        const scoreKey = `kuis${i}`;
-        const completedKey = `quiz${i}_completed`;
-        const newScore = newScores[scoreKey];
-        if (
-          newScore !== undefined &&
-          newScore >= kkmMap[i] &&
-          student[completedKey] === 0
-        ) {
-          progressToAdd += 20;
-          quizUpdates[completedKey] = 1;
-        }
-      }
-
-      if (currentScore) {
-        await currentScore.update(newScores, { transaction });
-      } else {
-        await Score.create({ nis, ...newScores }, { transaction });
-      }
-
-      if (progressToAdd > 0) {
-        const newProgress = Math.min(student.progress + progressToAdd, 100);
-        const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
-        await student.update(
-          { progress: newProgress, status, ...quizUpdates },
-          { transaction }
-        );
-      }
-
-      await transaction.commit();
-    } catch (error) {
-      await transaction.rollback();
-      throw error;
+  const transaction = await sequelize.transaction();
+  try {
+    const student = await Student.findOne({ where: { nis }, transaction });
+    if (!student) {
+      throw new Error("Siswa tidak ditemukan");
     }
-  },
+
+    // Validasi skor kuis sebelum membuat entri di QuizAttempt
+    if (kuis1 !== undefined && kuis1 !== null && !isNaN(kuis1) && kuis1 >= 0 && kuis1 <= 100) {
+      await QuizAttempt.create(
+        { nis, quiz_number: 1, score: kuis1 },
+        { transaction }
+      );
+    }
+    if (kuis2 !== undefined && kuis2 !== null && !isNaN(kuis2) && kuis2 >= 0 && kuis2 <= 100) {
+      await QuizAttempt.create(
+        { nis, quiz_number: 2, score: kuis2 },
+        { transaction }
+      );
+    }
+    if (kuis3 !== null && kuis3 !== null && !isNaN(kuis3) && kuis3 >= 0 && kuis3 <= 100) {
+      await QuizAttempt.create(
+        { nis, quiz_number: 3, score: kuis3 },
+        { transaction }
+      );
+    }
+    if (kuis4 !== undefined && kuis4 !== null && !isNaN(kuis4) && kuis4 >= 0 && kuis4 <= 100) {
+      await QuizAttempt.create(
+        { nis, quiz_number: 4, score: kuis4 },
+        { transaction }
+      );
+    }
+
+    const currentScore = await Score.findOne({ where: { nis }, transaction });
+    const kkmSettings = await KKMSetting.findAll({
+      where: { quiz_number: [1, 2, 3, 4] },
+      transaction,
+    });
+    const kkmMap = kkmSettings.reduce(
+      (acc, row) => {
+        acc[row.quiz_number] = row.kkm;
+        return acc;
+      },
+      { 1: 75, 2: 75, k3: 2, 75, 4: 75 }
+    );
+
+    // Persiapkan skor untuk disimpan di tabel scores
+    const newScores = {
+      kuis1:
+        kuis1 !== undefined && kuis1 !== null && !isNaN(kuis1)
+          ? Math.max(kuis1, currentScore?.kuis1 || 0)
+          : currentScore?.kuis1,
+      kuis2:
+        kuis2 !== null && kuis2 !== null && !isNaN(kuis2)
+          ? Math.max(kuis2, currentScore?.kuis2 || 0)
+        : currentScore?.kuis2,
+      kuis3:
+        kuis3 !== null && kuis3 !== null && !isNaN(kuis3)
+          ? Math.max(kuis3, currentScore?.kuis3 || 0)
+        : currentScore?.kuis3,
+      kuis4:
+        kuis4 !== undefined && kuis4 !== null && !isNaN(kuis4)
+          ? Math.max(kuis4, currentScore?.kuis4 || 0)
+        : currentScore?.kuis4,
+      latihan1:
+        latihan1 !== undefined && !isNaN(latihan1) ? latihan1 : currentScore?.latihan1,
+      latihan2:
+        latihan2 !== undefined && !isNaN(latihan2) ? latihan2 : currentScore?.latihan2,
+      latihan3:
+        latihan3 !== undefined && !isNaN(latihan3) ? latihan3 : currentScore?.latihan3,
+      latihan4:
+        latihan4 !== undefined && !isNaN(latihan4) ? latihan4 : currentScore?.latihan4,
+      evaluasi_akhir:
+        evaluasi_akhir !== undefined && !isNaN(evaluasi_akhir)
+          ? evaluasi_akhir
+          : currentScore?.evaluasi_akhir,
+    };
+
+    let progressToAdd = 0;
+    const quizUpdates = {};
+    for (let i = 1; i <= 4; i++) {
+      const scoreKey = `kuis${i}`;
+      const completedKey = `quiz${i}_completed`;
+      const newScore = newScores[scoreKey];
+      if (
+        newScore !== undefined &&
+        newScore !== null &&
+        newScore >= kkmMap[i] &&
+        student[completedKey] === 0
+      ) {
+        progressToAdd += 20;
+        quizUpdates[completedKey] = 1;
+      }
+    }
+
+    if (currentScore) {
+      await currentScore.update(newScores, { transaction });
+    } else {
+      await Score.create({ nis, ...newScores }, { transaction });
+    }
+
+    if (progressToAdd > 0) {
+      const newProgress = Math.min(student.progress + progressToAdd, 100);
+      const status = newProgress >= 100 ? "SELESAI" : "BELUM SELESAI";
+      await student.update(
+        { progress: newProgress, status, ...quizUpdates },
+        { transaction }
+      );
+    }
+
+    await transaction.commit();
+  } catch (error) {
+    await transaction.rollback();
+    throw error;
+  }
+},
 
   async submitEvaluationScore(nis, score) {
     const transaction = await sequelize.transaction();
