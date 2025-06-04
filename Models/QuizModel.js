@@ -25,10 +25,10 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-   image_url: {
-  type: DataTypes.LONGTEXT, // atau DataTypes.LONGTEXT
-  allowNull: true,
-},
+    image_url: {
+      type: DataTypes.TEXT("long"), // Maps to MySQL LONGTEXT (4GB)
+      allowNull: true,
+    },
   },
   {
     tableName: "questions",
