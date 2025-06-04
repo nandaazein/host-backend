@@ -444,7 +444,7 @@ const studentModel = {
         acc[row.quiz_number] = row.kkm;
         return acc;
       },
-      { 1: 75, 2: 75, k3: 2, 75, 4: 75 }
+      { 1: 75, 2: 75, 3: 2, 4: 75, 5: 75 }
     );
 
     // Persiapkan skor untuk disimpan di tabel scores
