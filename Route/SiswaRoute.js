@@ -74,5 +74,6 @@ router.get(
   },
   studentController.getQuizAttempts
 );
+router.get("/scores/:nis", verifyToken, studentController.getScores);
 
 export default router;
