@@ -25,9 +25,10 @@ const Question = sequelize.define(
       type: DataTypes.STRING,
       allowNull: false,
     },
-    image_url: {
-      type: DataTypes.TEXT, // Changed from STRING to TEXT
-    },
+   image_url: {
+  type: DataTypes.LONGTEXT, // atau DataTypes.LONGTEXT
+  allowNull: true,
+},
   },
   {
     tableName: "questions",
